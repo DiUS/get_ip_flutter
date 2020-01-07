@@ -6,7 +6,7 @@ class GetIp {
   static const MethodChannel _channel = const MethodChannel('get_ip');
 
   ///
-  /// Returns the IPv4-Address the device is aware of
+  /// Returns comma-separated IPv4-Address and broadcast address the device is aware of
   /// (depending on your network configuration)
   /// Can be null
   static Future<String> get ipAddress async {

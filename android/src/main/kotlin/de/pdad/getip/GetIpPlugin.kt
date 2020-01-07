@@ -31,16 +31,23 @@ class GetIpPlugin(): MethodCallHandler {
     try {
       val interfaces = Collections.list(NetworkInterface.getNetworkInterfaces())
       for (intf in interfaces) {
-        val addrs = Collections.list(intf.getInetAddresses())
-        for (addr in addrs) {
+        val interface_addrs = intf.getInterfaceAddresses()
+        for (interface_addr in interface_addrs) {
+          var addr = interface_addr.getAddress()
           if (!addr.isLoopbackAddress()) {
             val sAddr = addr.getHostAddress()
             //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
             val isIPv4 = sAddr.indexOf(':') < 0
 
             if (useIPv4) {
-              if (isIPv4)
-                return sAddr
+              if (isIPv4) {
+                var broadcastAddr = interface_addr.getBroadcast()
+                var sBroadcastAddr = broadcastAddr?.getHostAddress()
+                if (sBroadcastAddr != null)
+                  return sAddr + "," + sBroadcastAddr
+                else
+                  return sAddr
+              }
             } else {
               if (!isIPv4) {
                 val delim = sAddr.indexOf('%') // drop ip6 zone suffix
