@@ -6,9 +6,9 @@ class GetIp {
   static const MethodChannel _channel = const MethodChannel('get_ip');
 
   ///
-  /// Android: Returns the users IPv4-Address.
+  /// Android: Returns the users comma separated IPv4-Address and broadcast address
   ///          Can be null.
-  ///     iOS: Returns either IPv4- or IPv6-Address.
+  ///     iOS: Returns either comma separated IPv4-Address and broadcast address or IPv6-Address.
   ///          Can be null.
   static Future<String> get ipAddress async {
     final String ip = await _channel.invokeMethod('getIpAdress');

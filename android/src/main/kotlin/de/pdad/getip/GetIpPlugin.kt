@@ -31,7 +31,7 @@ class GetIpPlugin(): MethodCallHandler {
     try {
       val interfaces = Collections.list(NetworkInterface.getNetworkInterfaces())
       for (intf in interfaces) {
-        val interface_addrs = Collections.list(intf.getInterfaceAddresses())
+        val interface_addrs = intf.getInterfaceAddresses()
         for (interface_addr in interface_addrs) {
           var addr = interface_addr.getAddress()
           if (!addr.isLoopbackAddress()) {
@@ -42,8 +42,11 @@ class GetIpPlugin(): MethodCallHandler {
             if (useIPv4) {
               if (isIPv4) {
                 var broadcastAddr = interface_addr.getBroadcast()
-                var sBroadcastAddr = broadcastAddr.getHostAddress()
-                return sAddr
+                var sBroadcastAddr = broadcastAddr?.getHostAddress()
+                if (sBroadcastAddr != null)
+                  return sAddr + "," + sBroadcastAddr
+                else
+                  return sAddr
               }
             } else {
               if (!isIPv4) {

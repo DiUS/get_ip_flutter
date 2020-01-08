@@ -39,15 +39,17 @@ public class SwiftGetIpPlugin: NSObject, FlutterPlugin {
                     if (getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
                                     &hostname, socklen_t(hostname.count),
                                     nil, socklen_t(0), NI_NUMERICHOST) == 0) {
-                        if let address = String.fromCString(hostname) {
-                            if addrFamily == UInt8(AF_INET) {
-                                var net = interface.ifa_netmask.pointee
+                        address = String(cString: hostname)
+                        if addrFamily == UInt8(AF_INET) {
+                            if address != nil && !(address!).isEmpty {
                                 var netmaskName = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                                getnameinfo(&net, socklen_t(net.sa_len), &netmaskName, socklen_t(netmaskName.count),
+                                getnameinfo(interface.ifa_netmask, socklen_t(interface.ifa_netmask.pointee.sa_len),
+                                            &netmaskName, socklen_t(netmaskName.count),
                                             nil, socklen_t(0), NI_NUMERICHOST)
                                 if let netmask = String.init(validatingUTF8:netmaskName) {
-                                    let inverted_netmask = bitwise(~, net1: netmask)
-                                    let broadcast = bitwise(|, net1: network, net2: inverted_netmask)
+                                    let inverted_netmask = bitwise(op:~, net1: netmask)
+                                    let broadcast = bitwise(op:|, net1: address!, net2: inverted_netmask)
+                                    address = address! + "," + broadcast
                                 }
                             }
                         }
@@ -62,8 +64,8 @@ public class SwiftGetIpPlugin: NSObject, FlutterPlugin {
   }
 
   private func bitwise(op: (UInt8,UInt8) -> UInt8, net1: String, net2: String) -> String {
-      let net1numbers = toInts(net1)
-      let net2numbers = toInts(net2)
+      let net1numbers = toInts(networkString: net1)
+      let net2numbers = toInts(networkString: net2)
       var result = ""
       for i in 0..<net1numbers.count {
           result += "\(op(net1numbers[i],net2numbers[i]))"
@@ -74,8 +76,8 @@ public class SwiftGetIpPlugin: NSObject, FlutterPlugin {
       return result
   }
 
-  private func bitwise(op: UInt8 -> UInt8, net1: String) -> String {
-      let net1numbers = toInts(net1)
+  private func bitwise(op: (UInt8) -> UInt8, net1: String) -> String {
+      let net1numbers = toInts(networkString: net1)
       var result = ""
       for i in 0..<net1numbers.count {
           result += "\(op(net1numbers[i]))"
@@ -87,6 +89,6 @@ public class SwiftGetIpPlugin: NSObject, FlutterPlugin {
   }
 
   private func toInts(networkString: String) -> [UInt8] {
-      return (split(networkString){$0 == "."}).map{UInt8($0.toInt()!)}
+      return networkString.split(separator: ".").map({ UInt8($0)! })
   }
 }
